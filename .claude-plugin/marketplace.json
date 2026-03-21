@@ -1,14 +1,21 @@
 {
   "name": "dansunotori",
+  "description": "Claude Code plugins by Alexander Golev",
   "owner": {
     "name": "Alexander Golev",
     "email": "sasha@golev.com"
+  },
+  "metadata": {
+    "description": "Claude Code plugins by Alexander Golev",
+    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "ralph-loop-fixed",
       "source": "./plugins/ralph-loop-fixed",
-      "description": "Fixed Ralph Loop plugin. Uses heredoc to safely pass user prompts without shell expansion issues."
+      "description": "Fixed Ralph Loop plugin. Uses heredoc to safely pass user prompts without shell expansion issues.",
+      "version": "1.0.0",
+      "strict": true
     }
   ]
 }
