@@ -44,10 +44,10 @@ Single-quoted heredoc delimiters (`'RALPH_PROMPT_EOF'`) prevent all shell expans
 ```json
 {
   "extraKnownMarketplaces": {
-    "ralph-loop-fixed": {
+    "dansunotori": {
       "source": {
         "source": "git",
-        "url": "https://github.com/YOUR_USERNAME/ralph-loop-fixed.git"
+        "url": "https://github.com/dansunotori/ralph-loop-fixed.git"
       }
     }
   }
@@ -64,7 +64,7 @@ Single-quoted heredoc delimiters (`'RALPH_PROMPT_EOF'`) prevent all shell expans
 }
 ```
 
-Then run `/plugin install ralph-loop-fixed@ralph-loop-fixed`.
+Then run `/plugin install ralph-loop-fixed@dansunotori`.
 
 ## Usage
 
