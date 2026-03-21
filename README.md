@@ -47,7 +47,7 @@ Single-quoted heredoc delimiters (`'RALPH_PROMPT_EOF'`) prevent all shell expans
     "dansunotori": {
       "source": {
         "source": "github",
-        "repo": "dansunotori/ralph-loop-fixed"
+        "repo": "dansunotori/dansunotori-plugins"
       }
     }
   }
