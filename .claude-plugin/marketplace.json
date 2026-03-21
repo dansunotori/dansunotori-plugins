@@ -1,0 +1,14 @@
+{
+  "name": "dansunotori",
+  "owner": {
+    "name": "Alexander Golev",
+    "email": "sasha@golev.com"
+  },
+  "plugins": [
+    {
+      "name": "ralph-loop-fixed",
+      "source": "./plugins/ralph-loop-fixed",
+      "description": "Fixed Ralph Loop plugin. Uses heredoc to safely pass user prompts without shell expansion issues."
+    }
+  ]
+}
