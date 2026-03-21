@@ -8,7 +8,8 @@ set -euo pipefail
 if [[ "${1:-}" == "--from-stdin" ]]; then
   shift
   STDIN_CONTENT=$(cat)
-  read -ra STDIN_WORDS <<< "$STDIN_CONTENT"
+  STDIN_ONELINE=$(echo "$STDIN_CONTENT" | tr '\n' ' ')
+  read -ra STDIN_WORDS <<< "$STDIN_ONELINE"
   set -- "${STDIN_WORDS[@]}"
 fi
 
