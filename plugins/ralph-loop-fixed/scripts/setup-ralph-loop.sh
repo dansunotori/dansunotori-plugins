@@ -32,6 +32,7 @@ ARGUMENTS:
   PROMPT...    Initial prompt to start the loop (can be multiple words without quotes)
 
 OPTIONS:
+  --from-file <path>             Read prompt from a file (use for long prompts)
   --max-iterations <n>           Maximum iterations before auto-stop (default: unlimited)
   --completion-promise '<text>'  Promise phrase (USE QUOTES for multi-word)
   -h, --help                     Show this help message
@@ -52,6 +53,7 @@ EXAMPLES:
   /ralph-loop --max-iterations 10 Fix the auth bug
   /ralph-loop Refactor cache layer  (runs forever)
   /ralph-loop --completion-promise 'TASK COMPLETE' Create a REST API
+  /ralph-loop --from-file prompt.md --max-iterations 5
 
 STOPPING:
   Only by reaching --max-iterations or detecting --completion-promise
@@ -90,6 +92,18 @@ HELP_EOF
         exit 1
       fi
       MAX_ITERATIONS="$2"
+      shift 2
+      ;;
+    --from-file)
+      if [[ -z "${2:-}" ]]; then
+        echo "❌ Error: --from-file requires a file path" >&2
+        exit 1
+      fi
+      if [[ ! -f "$2" ]]; then
+        echo "❌ Error: file not found: $2" >&2
+        exit 1
+      fi
+      PROMPT_PARTS+=("$(<"$2")")
       shift 2
       ;;
     --completion-promise)
