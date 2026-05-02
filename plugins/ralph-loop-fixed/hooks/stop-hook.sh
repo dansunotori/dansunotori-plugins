@@ -6,10 +6,8 @@
 
 set -euo pipefail
 
-# Read hook input from stdin (advanced stop hook API)
-HOOK_INPUT=$(cat)
-
-# Check if ralph-loop is active
+# Check if ralph-loop is active BEFORE reading stdin (performance: avoid
+# blocking on cat when no loop is running)
 RALPH_STATE_FILE=".claude/ralph-loop.local.md"
 
 if [[ ! -f "$RALPH_STATE_FILE" ]]; then
@@ -17,12 +15,15 @@ if [[ ! -f "$RALPH_STATE_FILE" ]]; then
   exit 0
 fi
 
+# State file exists — read hook input from stdin now
+HOOK_INPUT=$(cat)
+
 # Parse markdown frontmatter (YAML between ---) and extract values
 FRONTMATTER=$(sed -n '/^---$/,/^---$/{ /^---$/d; p; }' "$RALPH_STATE_FILE")
 ITERATION=$(echo "$FRONTMATTER" | grep '^iteration:' | sed 's/iteration: *//')
 MAX_ITERATIONS=$(echo "$FRONTMATTER" | grep '^max_iterations:' | sed 's/max_iterations: *//')
 # Extract completion_promise and strip surrounding quotes if present
-COMPLETION_PROMISE=$(echo "$FRONTMATTER" | grep '^completion_promise:' | sed 's/completion_promise: *//' | sed 's/^"\(.*\)"$/\1/')
+COMPLETION_PROMISE=$(echo "$FRONTMATTER" | grep '^completion_promise:' | sed 's/completion_promise: *//' | sed 's/^"\(.*\)"$/\1/' | sed 's/\\"/"/g')
 
 # Session isolation: the state file is project-scoped, but the Stop hook
 # fires in every Claude Code session in that project. If another session
@@ -130,7 +131,7 @@ if [[ "$COMPLETION_PROMISE" != "null" ]] && [[ -n "$COMPLETION_PROMISE" ]]; then
   # Extract text from <promise> tags using Perl for multiline support
   # -0777 slurps entire input, s flag makes . match newlines
   # .*? is non-greedy (takes FIRST tag), whitespace normalized
-  PROMISE_TEXT=$(echo "$LAST_OUTPUT" | perl -0777 -pe 's/.*?<promise>(.*?)<\/promise>.*/$1/s; s/^\s+|\s+$//g; s/\s+/ /g' 2>/dev/null || echo "")
+  PROMISE_TEXT=$(echo "$LAST_OUTPUT" | perl -0777 -ne 'if (/<promise>(.*?)<\/promise>/s) { my $t = $1; $t =~ s/^\s+|\s+$//g; $t =~ s/\s+/ /g; print $t }' 2>/dev/null || echo "")
 
   # Use = for literal string comparison (not pattern matching)
   # == in [[ ]] does glob pattern matching which breaks with *, ?, [ characters
@@ -147,7 +148,7 @@ NEXT_ITERATION=$((ITERATION + 1))
 # Extract prompt (everything after the closing ---)
 # Skip first --- line, skip until second --- line, then print everything after
 # Use i>=2 instead of i==2 to handle --- in prompt content
-PROMPT_TEXT=$(awk '/^---$/{i++; next} i>=2' "$RALPH_STATE_FILE")
+PROMPT_TEXT=$(awk '/^---$/ && i<2 {i++; next} i>=2' "$RALPH_STATE_FILE")
 
 if [[ -z "$PROMPT_TEXT" ]]; then
   echo "⚠️  Ralph loop: State file corrupted or incomplete" >&2

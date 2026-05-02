@@ -8,8 +8,8 @@ set -euo pipefail
 if [[ "${1:-}" == "--from-stdin" ]]; then
   shift
   STDIN_CONTENT=$(cat)
-  STDIN_ONELINE=$(echo "$STDIN_CONTENT" | tr '\n' ' ')
-  read -ra STDIN_WORDS <<< "$STDIN_ONELINE"
+  STDIN_COLLAPSED=$(echo "$STDIN_CONTENT" | tr '\n' ' ')
+  read -ra STDIN_WORDS <<< "$STDIN_COLLAPSED"
   set -- "${STDIN_WORDS[@]}"
 fi
 
@@ -120,8 +120,34 @@ HELP_EOF
         echo "   Note: Multi-word promises must be quoted!" >&2
         exit 1
       fi
-      COMPLETION_PROMISE="$2"
+      VALUE="$2"
       shift 2
+      # Handle literal quotes from stdin (e.g. 'TASK COMPLETE' split into 'TASK and COMPLETE')
+      if [[ "$VALUE" == \'* ]] && [[ "$VALUE" != *\' ]]; then
+        while [[ $# -gt 0 ]] && [[ "$1" != *\' ]]; do
+          VALUE="$VALUE $1"
+          shift
+        done
+        if [[ $# -gt 0 ]]; then
+          VALUE="$VALUE $1"
+          shift
+        fi
+      elif [[ "$VALUE" == \"* ]] && [[ "$VALUE" != *\" ]]; then
+        while [[ $# -gt 0 ]] && [[ "$1" != *\" ]]; do
+          VALUE="$VALUE $1"
+          shift
+        done
+        if [[ $# -gt 0 ]]; then
+          VALUE="$VALUE $1"
+          shift
+        fi
+      fi
+      # Strip surrounding literal quotes
+      VALUE="${VALUE#\'}"
+      VALUE="${VALUE%\'}"
+      VALUE="${VALUE#\"}"
+      VALUE="${VALUE%\"}"
+      COMPLETION_PROMISE="$VALUE"
       ;;
     *)
       # Non-option argument - collect all as prompt parts
@@ -154,7 +180,8 @@ mkdir -p .claude
 
 # Quote completion promise for YAML if it contains special chars or is not null
 if [[ -n "$COMPLETION_PROMISE" ]] && [[ "$COMPLETION_PROMISE" != "null" ]]; then
-  COMPLETION_PROMISE_YAML="\"$COMPLETION_PROMISE\""
+  ESCAPED_PROMISE="${COMPLETION_PROMISE//\"/\\\"}"
+  COMPLETION_PROMISE_YAML="\"$ESCAPED_PROMISE\""
 else
   COMPLETION_PROMISE_YAML="null"
 fi
