@@ -1,5 +1,6 @@
 {
   "name": "ralph-loop-fixed",
+  "version": "1.1.0",
   "description": "Fixed Ralph Loop plugin. Continuous self-referential AI loops for iterative development. Uses heredoc to safely pass user prompts without shell expansion issues.",
   "author": {
     "name": "Alexander Golev",
