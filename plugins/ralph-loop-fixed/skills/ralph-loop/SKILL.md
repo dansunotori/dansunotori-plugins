@@ -11,7 +11,7 @@ disable-model-invocation: true
 Execute the setup script to initialize the Ralph loop:
 
 ```!
-"${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh" --from-stdin <<'RALPH_PROMPT_EOF'
+${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh --from-stdin <<'RALPH_PROMPT_EOF'
 $ARGUMENTS
 RALPH_PROMPT_EOF
 ```

@@ -167,6 +167,58 @@ This fixes the specific "Command contains newlines" error but does NOT fix issue
 
 Keep `/ralph-loop` prompt on a single line. Avoid shell-meaningful characters: `( ) ' " < > [ ] * ? { } , ; | & !`. This is fragile — natural language routinely contains these characters.
 
+## 2026-04-15 Update: Heredoc Regression on v2.1.109
+
+The heredoc fix (Option D below) stopped working between v2.1.79 and v2.1.109 (Claude Code).
+
+### Symptoms
+
+- Error: `Shell command permission check failed for pattern "```! ..."` (note: "Shell command" not "Bash command" — error path refactored)
+- Occurs even with single-word input like `dummy`
+- 60–120 second delay before error — indicates Haiku/Tengu LLM classifier, not deterministic regex
+- Removing the heredoc (raw `$ARGUMENTS`) also failed with the same error
+
+### Root cause: quoted path prevents allowed-tools match
+
+The `allowed-tools` pattern is unquoted:
+```
+Bash(${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh:*)
+```
+
+But the ```` ```! ```` command had the path in double quotes:
+```bash
+"${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh" $ARGUMENTS
+```
+
+After `${CLAUDE_PLUGIN_ROOT}` resolution, the pattern matcher compares:
+- Pattern: `Bash(/full/resolved/path/setup-ralph-loop.sh:*)`
+- Command: `"/full/resolved/path/setup-ralph-loop.sh" args...`
+
+The leading `"` in the command prevents the prefix match. No allowed-tools match → command falls through to the Haiku classifier → classifier evaluates for 60–120 seconds → rejects.
+
+Issue #136 documented this for v2.1.79 but concluded it was "NOT a problem" because single-line tests passed. On v2.1.109, the pattern matching appears stricter — quotes in the command path now prevent matching against unquoted patterns.
+
+### Fix applied
+
+Removed quotes from the path in the ```` ```! ```` block:
+
+```markdown
+```!
+${CLAUDE_PLUGIN_ROOT}/scripts/setup-ralph-loop.sh $ARGUMENTS
+```
+```
+
+This aligns the command with the `allowed-tools` pattern. Plugin cache paths do not contain spaces, so quoting is unnecessary.
+
+### What was NOT the cause
+
+| Suspect | Verdict | Evidence |
+|-|-|-|
+| Heredoc multi-line | Contributing but not root cause | Raw `$ARGUMENTS` (single line) also failed |
+| `deny-commands.sh` hook (absolute paths) | NOT involved in ```` ```! ```` blocks | 60–120s delay proves LLM classifier, not instant hook; hook strips quoted paths via `$STRIPPED` anyway |
+| Official `ralph-loop` plugin conflict | NOT involved | `ralph-loop@claude-plugins-official` confirmed `✘ disabled` via `claude plugins list` |
+| `disable-model-invocation: true` | NOT the cause | Same flag was present on v2.1.79 when it worked |
+
 ## Evidence Files
 
 - `/tmp/test-tengu-regex.mjs` — Reproduces the Tengu WGT regex match against our exact case

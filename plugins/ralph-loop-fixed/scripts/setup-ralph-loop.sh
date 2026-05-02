@@ -186,11 +186,14 @@ else
   COMPLETION_PROMISE_YAML="null"
 fi
 
+# CLAUDE_SESSION_ID is set by a global SessionStart hook (persist-session-id.sh)
+# that reads session_id from hook JSON input and writes it to $CLAUDE_ENV_FILE.
+# If the hook is not installed, session isolation is skipped (empty = no filtering).
 cat > .claude/ralph-loop.local.md <<EOF
 ---
 active: true
 iteration: 1
-session_id: ${CLAUDE_CODE_SESSION_ID:-}
+session_id: ${CLAUDE_SESSION_ID:-}
 max_iterations: $MAX_ITERATIONS
 completion_promise: $COMPLETION_PROMISE_YAML
 started_at: "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
