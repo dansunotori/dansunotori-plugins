@@ -1,7 +1,7 @@
 ---
 name: codex-opinion
 description: Use when you want a second opinion from OpenAI Codex on code, architecture, bugs, or implementation decisions. Also use when the user asks to "ask Codex", "get Codex's opinion", or "check with Codex".
-allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/codex-opinion.sh:*)", "Read", "Write(/tmp/codex-prompt*)"]
+allowed-tools: ["Bash(${CLAUDE_PLUGIN_ROOT}/scripts/codex-opinion.sh:*)", "Read", "Write"]
 ---
 
 # Codex Second Opinion
