@@ -1,3 +1,28 @@
+## Updating a Marketplace Plugin
+
+When modifying a plugin in this repo, ALL of these steps are required:
+
+1. **Edit the source files** in `plugins/<name>/` — never edit the installed cache at `~/.claude/plugins/cache/`.
+2. **Bump the version** in BOTH locations:
+   - `plugins/<name>/.claude-plugin/plugin.json` → `"version"` field
+   - `.claude-plugin/marketplace.json` → the plugin's `"version"` in the `plugins` array
+3. **Commit and push** to `main`. The marketplace serves from this git repo.
+4. **Refresh the marketplace and update the plugin**:
+   - `claude plugin marketplace update dansunotori` — refreshes the local marketplace catalogue from git remote
+   - `claude plugin update <name>@dansunotori` — downloads the new version into the cache
+5. **Restart the session** — skill `allowed-tools` changes require a fresh session.
+6. **Smoke test** through the skill (via `Skill` tool), not by calling scripts directly.
+
+### Version Resolution
+
+Plugin versions are resolved from the first available source: `plugin.json` `version` field → marketplace.json `version` field → git commit SHA. Setting an explicit version pins the plugin — new commits without a version bump will NOT trigger updates. The version in `plugin.json` takes precedence over `marketplace.json`.
+
+### `allowed-tools` Gotchas
+
+- **Write/Read/Edit path patterns**: No other plugin in the ecosystem uses path-restricted Write in `allowed-tools`. Use blanket `Write` or `Read` instead. Path restriction patterns (`Write(/tmp/*)`, `Write(//tmp/**)`) are undocumented territory with no working precedent.
+- **Bash path patterns**: Paths in `allowed-tools` Bash patterns must NOT be quoted. `Bash(${CLAUDE_PLUGIN_ROOT}/scripts/foo.sh:*)` works; `Bash("${CLAUDE_PLUGIN_ROOT}/scripts/foo.sh":*)` does not. See `docs/ralph-loop-investigation.md` for the full analysis.
+- **`allowed-tools` grants, does not restrict**: Listed tools get auto-approved. Unlisted tools fall back to normal permission checks. But if a tool IS listed with a non-matching pattern, it gets no grant AND settings.json may not be consulted as a fallback.
+
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
