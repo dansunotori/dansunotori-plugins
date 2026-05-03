@@ -1,0 +1,9 @@
+{
+  "name": "codex-opinion",
+  "version": "1.0.0",
+  "description": "Get a second opinion from OpenAI Codex CLI on code, architecture, or implementation decisions.",
+  "author": {
+    "name": "Alexander Golev",
+    "email": "sasha@golev.com"
+  }
+}
